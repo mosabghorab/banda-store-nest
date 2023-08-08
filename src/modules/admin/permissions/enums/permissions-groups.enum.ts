@@ -1,0 +1,15 @@
+export enum PermissionsGroups {
+  CATEGORIES = 'CATEGORIES',
+  PRODUCTS = 'PRODUCTS',
+  ADS = 'ADS',
+  // CHATS = 'CHATS',
+  // COMMENTS = 'COMMENTS',
+  FAVORITE = 'FAVORITE',
+  // MESSAGES = 'MESSAGES',
+  // ORDERS = 'ORDERS',
+  REASONS = 'REASONS',
+  REPORTS = 'REPORTS',
+  ROLES = 'ROLES',
+  USERS = 'USERS',
+  SETTINGS = 'SETTINGS',
+}

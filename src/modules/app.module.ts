@@ -4,7 +4,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { User } from './shared/users/entities/user.entity';
 import { UsersModule } from './shared/users/users.module';
 import { Category } from './shared/categories/entities/category.entity';
@@ -31,26 +31,15 @@ import { RolesModule } from './admin/roles/roles.module';
 import { PermissionsModule } from './admin/permissions/permissions.module';
 import { RolesPermissionsModule } from './admin/roles-permissions/roles-permissions.module';
 import { AdminsRolesModule } from './admin/admins-roles/admins-roles.module';
-import { JwtModule } from '@nestjs/jwt';
 import { AdminAuthModule } from './admin/auth/admin-auth.module';
 import { CustomerAuthModule } from './customer/auth/customer-auth.module';
 import { DriverAuthModule } from './driver/auth/driver-auth.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './shared/auth/guards/auth.guard';
 import { NotificationsModule } from './shared/notifications/notifications.module';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      global: true,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return {
-          secret: configService.get<string>('JWT_SECRET'),
-          signOptions: { expiresIn: '15h' },
-        };
-      },
-    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env.' + (process.env.NODE_ENV || 'development'),
@@ -78,11 +67,7 @@ import { NotificationsModule } from './shared/notifications/notifications.module
             Favorite,
             Reason,
             Report,
-            // Order,
             ProductImage,
-            // Chat,
-            // Message,
-            // Comment,
             Ad,
             Role,
             Permission,
@@ -107,11 +92,7 @@ import { NotificationsModule } from './shared/notifications/notifications.module
     FavoriteModule,
     ReasonsModule,
     ReportsModule,
-    // OrdersModule,
     ProductImagesModule,
-    // ChatsModule,
-    // MessagesModule,
-    // CommentsModule,
     AdsModule,
     RolesModule,
     PermissionsModule,
@@ -125,10 +106,10 @@ import { NotificationsModule } from './shared/notifications/notifications.module
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: CacheInterceptor,
-    // },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
   ],
 })
 export class AppModule {}

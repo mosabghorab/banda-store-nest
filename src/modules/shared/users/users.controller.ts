@@ -21,6 +21,7 @@ import { AdminMustCanDo } from '../../admin/permissions/metadata/admin-must-can-
 import { PermissionsActions } from '../../admin/permissions/enums/permissions-actions.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from './events/user-created.event';
+import { CreateOrUpdateUserUploadedFilesDto } from './dtos/create-or-update-user-uploaded-files.dto';
 
 @PermissionsTarget(PermissionsGroups.USERS)
 @Controller('users')
@@ -36,9 +37,13 @@ export class UsersController {
   @Post()
   async create(
     @Body() createUserDto: CreateUserDto,
-    @UploadedFiles() files?: any,
+    @UploadedFiles()
+    createOrUpdateUserUploadedFilesDto: CreateOrUpdateUserUploadedFilesDto,
   ) {
-    const user = await this.usersService.create(createUserDto, files);
+    const user = await this.usersService.create(
+      createUserDto,
+      createOrUpdateUserUploadedFilesDto,
+    );
     // trigger user.created event.
     this.eventEmitter.emit(
       'user.created',
@@ -74,9 +79,14 @@ export class UsersController {
   async update(
     @Param('id') id: number,
     @Body() body: UpdateUserDto,
-    @UploadedFiles() files?: any,
+    @UploadedFiles()
+    createOrUpdateUserUploadedFilesDto: CreateOrUpdateUserUploadedFilesDto,
   ) {
-    return this.usersService.update(id, body, files);
+    return this.usersService.update(
+      id,
+      body,
+      createOrUpdateUserUploadedFilesDto,
+    );
   }
 
   @AllowFor(UserType.ADMIN)

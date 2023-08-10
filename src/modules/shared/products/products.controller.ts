@@ -16,7 +16,7 @@ import { CreateProductDto } from './dtos/create-product.dto';
 import { ProductDto } from './dtos/product.dto';
 import { ProductsWithPaginationDto } from './dtos/products-with-pagination.dto';
 import { Serialize } from '../../../core/interceptors/serialize.interceptor';
-import { AuthUser } from '../auth/custom-decorators/auth-user-decorator';
+import { GetAuthedUser } from '../auth/custom-decorators/auth-user-decorator';
 import { PermissionsTarget } from '../../admin/permissions/metadata/permissions-target.metadata';
 import { PermissionsGroups } from '../../admin/permissions/enums/permissions-groups.enum';
 import { AllowFor } from '../auth/metadata/allow-for.metadata';
@@ -24,7 +24,7 @@ import { UserType } from '../users/enums/user-type.enum';
 import { AdminMustCanDo } from '../../admin/permissions/metadata/admin-must-can-do.metadata';
 import { PermissionsActions } from '../../admin/permissions/enums/permissions-actions.enum';
 import { Public } from '../auth/metadata/public.metadata';
-import { AuthUser } from '../auth/types/auth-user.type';
+import { AuthedUser } from '../auth/types/authed-user.type';
 
 @PermissionsTarget(PermissionsGroups.PRODUCTS)
 @Controller('products')
@@ -36,7 +36,7 @@ export class ProductsController {
   @Serialize(ProductDto, 'Product created successfully.')
   @Post()
   async create(
-    @AuthUser() user: AuthUser,
+    @GetAuthedUser() user: AuthedUser,
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: any,
   ) {
@@ -48,7 +48,7 @@ export class ProductsController {
   @Serialize(ProductDto, 'Products created successfully.')
   @Post('fake')
   async generateFake(
-    @AuthUser() user: AuthUser,
+    @GetAuthedUser() user: AuthedUser,
     @Query('count') count: number,
   ) {
     return this.productsService.generateFake(user.id, count);

@@ -37,12 +37,23 @@ import { DriverAuthModule } from './driver/auth/driver-auth.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './shared/auth/guards/auth.guard';
 import { NotificationsModule } from './shared/notifications/notifications.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env.' + (process.env.NODE_ENV || 'development'),
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          secret: configService.get<string>('JWT_SECRET'),
+          signOptions: { expiresIn: '15h' },
+        };
+      },
     }),
     CacheModule.register({
       isGlobal: true,

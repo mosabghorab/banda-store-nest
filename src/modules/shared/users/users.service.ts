@@ -8,16 +8,15 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-import { CreateOrUpdateUserUploadFilesDto } from './dtos/create-or-update-user-upload-files.dto';
 import { unlinkSync } from 'fs';
 import { FindOptionsRelations } from 'typeorm/browser';
 import { Constants } from '../../../core/constants';
-import { UploadImageDto } from '../../../core/dtos/upload-image.dto';
-import { saveFile, validateDto } from '../../../core/helpers';
+import { saveFile } from '../../../core/helpers';
 import { AdminsRolesService } from '../../admin/admins-roles/admins-roles.service';
 import { UserType } from './enums/user-type.enum';
 import { CustomerSignUpDto } from '../../customer/auth/dios/customer-sign-up.dto';
 import { DriverSignUpDto } from '../../driver/auth/dios/driver-sign-up.dto';
+import { CreateOrUpdateUserUploadedFilesDto } from './dtos/create-or-update-user-uploaded-files.dto';
 
 @Injectable()
 export class UsersService {
@@ -58,7 +57,7 @@ export class UsersService {
   // create.
   async create(
     dto: CreateUserDto | CustomerSignUpDto | DriverSignUpDto,
-    files?: any,
+    createOrUpdateUserUploadedFilesDto: CreateOrUpdateUserUploadedFilesDto,
   ) {
     const userByPhone = await this.findByPhone(dto.phone, dto.type);
     if (userByPhone) {
@@ -68,18 +67,21 @@ export class UsersService {
     if (userByEmail) {
       throw new BadRequestException('Email is already exists.');
     }
-    const createUserUploadFilesDto =
-      await this._prepareCreateOrUpdateUserUploadFilesDtoFromFiles(files);
-    if (createUserUploadFilesDto.image) {
-      dto.image = createUserUploadFilesDto.image.name;
+    if (createOrUpdateUserUploadedFilesDto.image) {
+      await saveFile(
+        Constants.usersImagesPath,
+        createOrUpdateUserUploadedFilesDto.image.name,
+        createOrUpdateUserUploadedFilesDto.image,
+      );
+      dto.image = createOrUpdateUserUploadedFilesDto.image.name;
     }
     const userToCreate = await this.repo.create(dto);
     if (dto.type == UserType.ADMIN) {
-      const usersRoles = await this.usersRolesService.create(
+      const adminsRoles = await this.usersRolesService.create(
         userToCreate.id,
         (dto as CreateUserDto).rolesIds,
       );
-      userToCreate.adminsRoles = usersRoles;
+      userToCreate.adminsRoles = adminsRoles;
     }
     const createdUser = await this.repo.save(userToCreate);
     delete createdUser.password;
@@ -97,7 +99,11 @@ export class UsersService {
   }
 
   // update.
-  async update(id: number, updateUserDto: UpdateUserDto, files?: any) {
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    createOrUpdateUserUploadedFilesDto: CreateOrUpdateUserUploadedFilesDto,
+  ) {
     const user = await this.findOneById(id);
     if (!user) {
       throw new NotFoundException('User not found.');
@@ -120,11 +126,14 @@ export class UsersService {
         throw new BadRequestException('Email is already exists.');
       }
     }
-    const createOrUpdateUserUploadFilesDto =
-      await this._prepareCreateOrUpdateUserUploadFilesDtoFromFiles(files);
-    if (createOrUpdateUserUploadFilesDto.image) {
+    if (createOrUpdateUserUploadedFilesDto.image) {
+      await saveFile(
+        Constants.usersImagesPath,
+        createOrUpdateUserUploadedFilesDto.image.name,
+        createOrUpdateUserUploadedFilesDto.image,
+      );
       unlinkSync(Constants.usersImagesPath + user.image);
-      updateUserDto.image = createOrUpdateUserUploadFilesDto.image.name;
+      updateUserDto.image = createOrUpdateUserUploadedFilesDto.image.name;
     }
     Object.assign(user, updateUserDto);
     const updatedUser = await this.repo.save(user);
@@ -139,25 +148,6 @@ export class UsersService {
       throw new NotFoundException('User not found.');
     }
     return this.repo.remove(user);
-  }
-
-  // prepare create or update user upload files dto from files.
-  private async _prepareCreateOrUpdateUserUploadFilesDtoFromFiles(
-    files: any,
-  ): Promise<CreateOrUpdateUserUploadFilesDto> {
-    const createOrUpdateUserUploadFilesDto =
-      new CreateOrUpdateUserUploadFilesDto();
-    createOrUpdateUserUploadFilesDto.image = UploadImageDto.fromFile(
-      files?.image,
-    );
-    await validateDto(createOrUpdateUserUploadFilesDto);
-    if (createOrUpdateUserUploadFilesDto.image)
-      await saveFile(
-        Constants.usersImagesPath,
-        createOrUpdateUserUploadFilesDto.image.name,
-        createOrUpdateUserUploadFilesDto.image,
-      );
-    return createOrUpdateUserUploadFilesDto;
   }
 
   // get all properties names od user entity.

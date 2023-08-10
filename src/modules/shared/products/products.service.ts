@@ -17,7 +17,7 @@ import { CreateProductUploadFilesDto } from './dtos/create-product-upload-files.
 import { ProductImagesService } from '../product-images/product-images.service';
 import { unlinkSync } from 'fs';
 import { FindOptionsRelations } from 'typeorm/find-options/FindOptionsRelations';
-import { UpdateProductUploadFilesDto } from './dtos/update-product-upload-files.dto';
+import { UpdateProductUploadedFilesDto } from './dtos/update-product-uploaded-files.dto';
 import { Constants } from '../../../core/constants';
 import { faker } from '@faker-js/faker';
 import { UploadImageDto } from '../../../core/dtos/upload-image.dto';
@@ -229,12 +229,12 @@ export class ProductsService {
   // prepare update product upload files dto from files.
   private _prepareUpdateProductUploadFilesDtoFromFiles = async (
     files: any,
-  ): Promise<UpdateProductUploadFilesDto> => {
+  ): Promise<UpdateProductUploadedFilesDto> => {
     const imagesUploadImageDto = [];
     for (const image of files?.images || []) {
       imagesUploadImageDto.push(UploadImageDto.fromFile(image));
     }
-    const updateProductUploadFilesDto = new UpdateProductUploadFilesDto();
+    const updateProductUploadFilesDto = new UpdateProductUploadedFilesDto();
     updateProductUploadFilesDto.mainImage = UploadImageDto.fromFile(
       files?.mainImage,
     );

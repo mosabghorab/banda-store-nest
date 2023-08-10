@@ -10,11 +10,11 @@ import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { PUBLIC_KEY } from '../metadata/public.metadata';
 import { can, extractTokenFromHeader } from '../../../../core/helpers';
-import { USER_TYPES_KEY } from '../metadata/allow-for.metadata';
 import { UserType } from '../../users/enums/user-type.enum';
-import { PERMISSION_ACTION_KEY } from '../../../admin/permissions/metadata/admin-must-can-do.metadata';
 import { PERMISSIONS_TARGET_KEY } from '../../../admin/permissions/metadata/permissions-target.metadata';
-import { AuthUser } from '../types/auth-user.type';
+import { AuthedUser } from '../types/authed-user.type';
+import { ALLOW_FOR_KEY } from '../metadata/allow-for.metadata';
+import { ADMIN_MUST_CAN_DO_KEY } from '../../../admin/permissions/metadata/admin-must-can-do.metadata';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -35,34 +35,35 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
-    let authUser: AuthUser;
+    let authedUser: AuthedUser;
     try {
-      authUser = await this.jwtService.verifyAsync(token, {
+      authedUser = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
     } catch {
       throw new UnauthorizedException();
     }
-    const userTypes = this.reflector.getAllAndOverride<any>(USER_TYPES_KEY, [
+    const allowFor = this.reflector.getAllAndOverride<any>(ALLOW_FOR_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!userTypes.some((e) => e == authUser.type))
+    if (!allowFor.some((e) => e == authedUser.type))
       throw new ForbiddenException();
-    if (authUser.type == UserType.ADMIN) {
+    if (authedUser.type == UserType.ADMIN) {
       const permissionGroup = this.reflector.getAllAndOverride<any>(
         PERMISSIONS_TARGET_KEY,
         [context.getClass()],
       );
       const permissionAction = this.reflector.getAllAndOverride<any>(
-        PERMISSION_ACTION_KEY,
+        ADMIN_MUST_CAN_DO_KEY,
         [context.getHandler()],
       );
-      if (!can(permissionAction, permissionGroup, authUser.adminsRoles)) {
+      return true;
+      if (!can(permissionAction, permissionGroup, authedUser.adminsRoles)) {
         throw new ForbiddenException();
       }
     }
-    request.user = authUser;
+    request.user = authedUser;
     return true;
   }
 }

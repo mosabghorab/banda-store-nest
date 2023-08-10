@@ -13,20 +13,25 @@ import { CreateAdUploadedFilesDto } from './dtos/create-ad-uploaded-files.dto';
 import { UpdateAdUploadedFilesDto } from './dtos/update-ad-uploaded-files.dto';
 import { createReadStream, unlinkSync } from 'fs';
 import { Constants } from '../../../core/constants';
-import { UploadImageDto } from '../../../core/dtos/upload-image.dto';
-import { saveFile, validateDto } from '../../../core/helpers';
+import { saveFile } from '../../../core/helpers';
 
 @Injectable()
 export class AdsService {
   constructor(@InjectRepository(Ad) private readonly repo: Repository<Ad>) {}
 
   // create.
-  async create(createAdDto: CreateAdDto, files: any): Promise<Ad> {
-    const createAdUploadFilesDto =
-      await this._prepareCreateAdUploadedFilesDtoFromFiles(files);
+  async create(
+    createAdDto: CreateAdDto,
+    createAdUploadedFilesDto: CreateAdUploadedFilesDto,
+  ): Promise<Ad> {
+    await saveFile(
+      Constants.adsImagesPath,
+      createAdUploadedFilesDto.image.name,
+      createAdUploadedFilesDto.image,
+    );
     return this.repo.save(
       await this.repo.create({
-        image: createAdUploadFilesDto.image.name,
+        image: createAdUploadedFilesDto.image.name,
         ...createAdDto,
       }),
     );
@@ -56,16 +61,23 @@ export class AdsService {
   }
 
   // update.
-  async update(id: number, updateAdDto: UpdateAdDto, files: any): Promise<Ad> {
-    const updateAdUploadFilesDto =
-      await this._prepareUpdateAdUploadFilesDtoFromFiles(files);
+  async update(
+    id: number,
+    updateAdDto: UpdateAdDto,
+    updateAdUploadedFilesDto: UpdateAdUploadedFilesDto,
+  ): Promise<Ad> {
     const ad = await this.findOneById(id);
     if (!ad) {
       throw new NotFoundException('Ad not found.');
     }
-    if (updateAdUploadFilesDto.image) {
+    if (updateAdUploadedFilesDto.image) {
+      await saveFile(
+        Constants.adsImagesPath,
+        updateAdUploadedFilesDto.image.name,
+        updateAdUploadedFilesDto.image,
+      );
       unlinkSync(Constants.adsImagesPath + ad.image);
-      ad.image = updateAdUploadFilesDto.image.name;
+      ad.image = updateAdUploadedFilesDto.image.name;
     }
     Object.assign(ad, updateAdDto);
     return this.repo.save(ad);
@@ -79,35 +91,4 @@ export class AdsService {
     }
     return this.repo.remove(ad);
   }
-
-  // prepare create ad uploaded files dto from files.
-  private _prepareCreateAdUploadedFilesDtoFromFiles = async (
-    files: any,
-  ): Promise<CreateAdUploadedFilesDto> => {
-    const createAdUploadFilesDto = new CreateAdUploadedFilesDto();
-    createAdUploadFilesDto.image = UploadImageDto.fromFile(files?.image);
-    await validateDto(createAdUploadFilesDto);
-    await saveFile(
-      Constants.adsImagesPath,
-      createAdUploadFilesDto.image.name,
-      createAdUploadFilesDto.image,
-    );
-    return createAdUploadFilesDto;
-  };
-
-  // prepare update ad upload files dto from files.
-  private _prepareUpdateAdUploadFilesDtoFromFiles = async (
-    files: any,
-  ): Promise<UpdateAdUploadedFilesDto> => {
-    const updateAdUploadFilesDto = new UpdateAdUploadedFilesDto();
-    updateAdUploadFilesDto.image = UploadImageDto.fromFile(files?.image);
-    await validateDto(updateAdUploadFilesDto);
-    if (updateAdUploadFilesDto.image)
-      await saveFile(
-        Constants.adsImagesPath,
-        updateAdUploadFilesDto.image.name,
-        updateAdUploadFilesDto.image,
-      );
-    return updateAdUploadFilesDto;
-  };
 }

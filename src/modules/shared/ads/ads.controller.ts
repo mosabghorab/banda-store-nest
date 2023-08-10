@@ -21,6 +21,8 @@ import { UserType } from '../users/enums/user-type.enum';
 import { AdminMustCanDo } from '../../admin/permissions/metadata/admin-must-can-do.metadata';
 import { PermissionsActions } from '../../admin/permissions/enums/permissions-actions.enum';
 import { Public } from '../auth/metadata/public.metadata';
+import { CreateAdUploadedFilesDto } from './dtos/create-ad-uploaded-files.dto';
+import { UpdateAdUploadedFilesDto } from './dtos/update-ad-uploaded-files.dto';
 
 @PermissionsTarget(PermissionsGroups.ADS)
 @Controller('ads')
@@ -31,8 +33,11 @@ export class AdsController {
   @AdminMustCanDo(PermissionsActions.CREATE)
   @Serialize(AdDto, 'Ad created successfully.')
   @Post()
-  async create(@Body() createAdDto: CreateAdDto, @UploadedFiles() files: any) {
-    return this.adsService.create(createAdDto, files);
+  async create(
+    @Body() createAdDto: CreateAdDto,
+    @UploadedFiles() createAdUploadedFilesDto: CreateAdUploadedFilesDto,
+  ) {
+    return this.adsService.create(createAdDto, createAdUploadedFilesDto);
   }
 
   @Public()
@@ -66,9 +71,9 @@ export class AdsController {
   async update(
     @Param('id') id: number,
     @Body() updateAdDto: UpdateAdDto,
-    @UploadedFiles() files: any,
+    @UploadedFiles() updateAdUploadedFilesDto: UpdateAdUploadedFilesDto,
   ) {
-    return this.adsService.update(id, updateAdDto, files);
+    return this.adsService.update(id, updateAdDto, updateAdUploadedFilesDto);
   }
 
   @AllowFor(UserType.ADMIN)

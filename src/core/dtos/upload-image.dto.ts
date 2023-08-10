@@ -6,6 +6,7 @@ import { generateUniqueFileName } from '../helpers';
 
 export class UploadImageDto {
   @IsString()
+  @Transform(({ value }) => generateUniqueFileName(value))
   name: string;
 
   @IsObject()
@@ -19,6 +20,8 @@ export class UploadImageDto {
   @IsEnum(ImageExtension)
   mimetype: ImageExtension;
 
+  @IsObject()
+  @Transform(({ value }) => promisify(value))
   mv: any;
 
   // return instance from specific file.

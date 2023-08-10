@@ -13,7 +13,6 @@ import { CategoriesService } from './categories.service';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
 import { CategoryDto } from './dtos/category.dto';
 import { Serialize } from '../../../core/interceptors/serialize.interceptor';
-import { AuthUser } from '../auth/custom-decorators/auth-user-decorator';
 import { PermissionsActions } from '../../admin/permissions/enums/permissions-actions.enum';
 import { AllowFor } from '../auth/metadata/allow-for.metadata';
 import { UserType } from '../users/enums/user-type.enum';
@@ -21,7 +20,10 @@ import { AdminMustCanDo } from '../../admin/permissions/metadata/admin-must-can-
 import { PermissionsTarget } from '../../admin/permissions/metadata/permissions-target.metadata';
 import { PermissionsGroups } from '../../admin/permissions/enums/permissions-groups.enum';
 import { Public } from '../auth/metadata/public.metadata';
-import { AuthUser } from '../auth/types/auth-user.type';
+import { AuthedUser } from '../auth/types/authed-user.type';
+import { GetAuthedUser } from '../auth/custom-decorators/auth-user-decorator';
+import { CreateCategoryUploadedFilesDto } from './dtos/create-category-upload-files.dto';
+import { UpdateCategoryUploadedFilesDto } from './dtos/update-category-upload-files.dto';
 
 @PermissionsTarget(PermissionsGroups.CATEGORIES)
 @Controller('categories')
@@ -33,11 +35,16 @@ export class CategoriesController {
   @Serialize(CategoryDto, 'Category created successfully.')
   @Post()
   async create(
-    @AuthUser() user: AuthUser,
+    @GetAuthedUser() user: AuthedUser,
     @Body() createCategoryDto: CreateCategoryDto,
-    @UploadedFiles() files: any,
+    @UploadedFiles()
+    createCategoryUploadedFilesDto: CreateCategoryUploadedFilesDto,
   ) {
-    return this.categoriesService.create(user.id, createCategoryDto, files);
+    return this.categoriesService.create(
+      user.id,
+      createCategoryDto,
+      createCategoryUploadedFilesDto,
+    );
   }
 
   @AllowFor(UserType.ADMIN)
@@ -47,9 +54,14 @@ export class CategoriesController {
   async update(
     @Param('id') id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
-    @UploadedFiles() files: any,
+    @UploadedFiles()
+    updateCategoryUploadedFilesDto: UpdateCategoryUploadedFilesDto,
   ) {
-    return this.categoriesService.update(id, updateCategoryDto, files);
+    return this.categoriesService.update(
+      id,
+      updateCategoryDto,
+      updateCategoryUploadedFilesDto,
+    );
   }
 
   @Public()

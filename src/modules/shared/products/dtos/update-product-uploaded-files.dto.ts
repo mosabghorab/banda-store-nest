@@ -1,7 +1,7 @@
 import { IsOptional, ValidateNested } from 'class-validator';
 import { UploadImageDto } from '../../../../core/dtos/upload-image.dto';
 
-export class UpdateProductUploadFilesDto {
+export class UpdateProductUploadedFilesDto {
   @IsOptional()
   @ValidateNested()
   mainImage: UploadImageDto;

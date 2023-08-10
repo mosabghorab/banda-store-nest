@@ -6,7 +6,7 @@ import { CreateCategoryDto } from './dtos/create-category.dto';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
 import { FindOptionsRelations } from 'typeorm/find-options/FindOptionsRelations';
 import { unlinkSync } from 'fs';
-import { UpdateCategoryUploadedFilesDto } from './dtos/update-category-upload-files.dto';
+import { UpdateCategoryUploadedFilesDto } from './dtos/update-category-uploaded-files.dto';
 import { Constants } from '../../../core/constants';
 import { saveFile } from '../../../core/helpers';
 

@@ -1,12 +1,6 @@
-import { IsOptional, ValidateNested } from 'class-validator';
-import { UploadImageDto } from '../../../../core/dtos/upload-image.dto';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProductUploadedFilesDto } from './create-product-uploaded-files.dto';
 
-export class UpdateProductUploadedFilesDto {
-  @IsOptional()
-  @ValidateNested()
-  mainImage: UploadImageDto;
-
-  @IsOptional()
-  @ValidateNested({ each: true })
-  images: UploadImageDto[];
-}
+export class UpdateProductUploadedFilesDto extends PartialType(
+  CreateProductUploadedFilesDto,
+) {}

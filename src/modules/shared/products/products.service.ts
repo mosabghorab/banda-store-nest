@@ -13,7 +13,7 @@ import { UsersService } from '../users/users.service';
 import { UpdateProductDto } from './dtos/update-product.dto';
 import { FilterProductsDto } from './dtos/filter-products.dto';
 import { CategoriesService } from '../categories/categories.service';
-import { CreateProductUploadFilesDto } from './dtos/create-product-upload-files.dto';
+import { CreateProductUploadedFilesDto } from './dtos/create-product-uploaded-files.dto';
 import { ProductImagesService } from '../product-images/product-images.service';
 import { unlinkSync } from 'fs';
 import { FindOptionsRelations } from 'typeorm/find-options/FindOptionsRelations';
@@ -35,9 +35,13 @@ export class ProductsService {
   ) {}
 
   // create new product.
-  async create(userId: number, createProductDto: CreateProductDto, files: any) {
-    const createProductUploadFilesDto =
-      await this._prepareCreateProductUploadFilesDtoFromFiles(files);
+  async create(
+    userId: number,
+    createProductDto: CreateProductDto,
+    createProductUploadedFilesDto: CreateProductUploadedFilesDto,
+  ) {
+    // const createProductUploadFilesDto =
+    //   await this._prepareCreateProductUploadFilesDtoFromFiles(files);
     const user = await this.usersService.findOneById(userId);
     const category = await this.categoriesService.findOneById(
       createProductDto.categoryId,
@@ -51,8 +55,13 @@ export class ProductsService {
     if (!subCategory) {
       throw new NotFoundException('Sub category not found');
     }
+    await saveFile(
+      Constants.productsImagesPath,
+      createProductUploadedFilesDto.mainImage?.name,
+      createProductUploadedFilesDto.mainImage,
+    );
     const product = await this.repo.create({
-      mainImage: createProductUploadFilesDto.mainImage.name,
+      mainImage: createProductUploadedFilesDto.mainImage.name,
       ...createProductDto,
     });
     product.user = user;
@@ -61,9 +70,10 @@ export class ProductsService {
     const newProduct = await this.repo.save(product);
     // save product images.
     const images = [];
-    for (const value of createProductUploadFilesDto.images) {
+    for (const image of createProductUploadedFilesDto.images) {
+      await saveFile(Constants.productsImagesPath, image.name, image);
       images.push(
-        await this.productImagesService.create(newProduct.id, value.name),
+        await this.productImagesService.create(newProduct.id, image.name),
       );
     }
     newProduct.images = images;
@@ -131,22 +141,30 @@ export class ProductsService {
   }
 
   // update.
-  async update(id: number, updateProductDto: UpdateProductDto, files: any) {
-    const updateProductUploadFilesDto =
-      await this._prepareUpdateProductUploadFilesDtoFromFiles(files);
+  async update(
+    id: number,
+    updateProductDto: UpdateProductDto,
+    updateProductUploadedFilesDto: UpdateProductUploadedFilesDto,
+  ) {
     const product = await this.findOneById(id, { images: true });
     if (!product) {
       throw new NotFoundException('Product not found.');
     }
-    if (updateProductUploadFilesDto.mainImage) {
+    if (updateProductUploadedFilesDto.mainImage) {
       unlinkSync(Constants.productsImagesPath + product.mainImage);
-      product.mainImage = updateProductUploadFilesDto.mainImage.name;
+      await saveFile(
+        Constants.productsImagesPath,
+        updateProductUploadedFilesDto.mainImage?.name,
+        updateProductUploadedFilesDto.mainImage,
+      );
+      product.mainImage = updateProductUploadedFilesDto.mainImage.name;
     }
-    if (updateProductUploadFilesDto.images?.length > 0) {
+    if (updateProductUploadedFilesDto.images?.length > 0) {
       const images = [];
-      for (const value of updateProductUploadFilesDto.images) {
+      for (const image of updateProductUploadedFilesDto.images) {
+        await saveFile(Constants.productsImagesPath, image.name, image);
         images.push(
-          await this.productImagesService.create(product.id, value.name),
+          await this.productImagesService.create(product.id, image.name),
         );
       }
       product.images.push(...images);
@@ -204,12 +222,12 @@ export class ProductsService {
   // prepare create product upload files dto from files.
   private _prepareCreateProductUploadFilesDtoFromFiles = async (
     files: any,
-  ): Promise<CreateProductUploadFilesDto> => {
+  ): Promise<CreateProductUploadedFilesDto> => {
     const imagesUploadImageDto = [];
     for (const image of files?.images || []) {
       imagesUploadImageDto.push(UploadImageDto.fromFile(image));
     }
-    const createProductUploadFilesDto = new CreateProductUploadFilesDto();
+    const createProductUploadFilesDto = new CreateProductUploadedFilesDto();
     createProductUploadFilesDto.mainImage = UploadImageDto.fromFile(
       files?.mainImage,
     );

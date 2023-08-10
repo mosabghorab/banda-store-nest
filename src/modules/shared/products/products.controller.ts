@@ -25,6 +25,8 @@ import { AdminMustCanDo } from '../../admin/permissions/metadata/admin-must-can-
 import { PermissionsActions } from '../../admin/permissions/enums/permissions-actions.enum';
 import { Public } from '../auth/metadata/public.metadata';
 import { AuthedUser } from '../auth/types/authed-user.type';
+import { CreateProductUploadedFilesDto } from './dtos/create-product-uploaded-files.dto';
+import { UpdateProductUploadedFilesDto } from './dtos/update-product-uploaded-files.dto';
 
 @PermissionsTarget(PermissionsGroups.PRODUCTS)
 @Controller('products')
@@ -38,9 +40,14 @@ export class ProductsController {
   async create(
     @GetAuthedUser() user: AuthedUser,
     @Body() createProductDto: CreateProductDto,
-    @UploadedFiles() files: any,
+    @UploadedFiles()
+    createProductUploadedFilesDto: CreateProductUploadedFilesDto,
   ) {
-    return this.productsService.create(user.id, createProductDto, files);
+    return this.productsService.create(
+      user.id,
+      createProductDto,
+      createProductUploadedFilesDto,
+    );
   }
 
   @AllowFor(UserType.ADMIN)
@@ -61,9 +68,14 @@ export class ProductsController {
   async update(
     @Param('id') id: number,
     @Body() updateProductDto: UpdateProductDto,
-    @UploadedFiles() files: any,
+    @UploadedFiles()
+    updateProductUploadedFilesDto: UpdateProductUploadedFilesDto,
   ) {
-    return this.productsService.update(id, updateProductDto, files);
+    return this.productsService.update(
+      id,
+      updateProductDto,
+      updateProductUploadedFilesDto,
+    );
   }
 
   @Public()

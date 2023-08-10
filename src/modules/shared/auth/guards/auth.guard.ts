@@ -58,7 +58,6 @@ export class AuthGuard implements CanActivate {
         ADMIN_MUST_CAN_DO_KEY,
         [context.getHandler()],
       );
-      return true;
       if (!can(permissionAction, permissionGroup, authedUser.adminsRoles)) {
         throw new ForbiddenException();
       }

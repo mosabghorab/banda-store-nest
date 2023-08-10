@@ -22,8 +22,8 @@ import { PermissionsGroups } from '../../admin/permissions/enums/permissions-gro
 import { Public } from '../auth/metadata/public.metadata';
 import { AuthedUser } from '../auth/types/authed-user.type';
 import { GetAuthedUser } from '../auth/custom-decorators/auth-user-decorator';
-import { CreateCategoryUploadedFilesDto } from './dtos/create-category-upload-files.dto';
-import { UpdateCategoryUploadedFilesDto } from './dtos/update-category-upload-files.dto';
+import { CreateCategoryUploadedFilesDto } from './dtos/create-category-uploaded-files.dto';
+import { UpdateCategoryUploadedFilesDto } from './dtos/update-category-uploaded-files.dto';
 
 @PermissionsTarget(PermissionsGroups.CATEGORIES)
 @Controller('categories')
